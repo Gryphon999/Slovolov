@@ -5,6 +5,7 @@ import { HISTORY_MAX, type Save, nextStreak } from '../core/save';
 import { plural, points, starsFor } from '../core/words';
 import { type Platform, saveLocal } from '../platform/platform';
 import { renderCard } from './card';
+import { diag, toggleDiag } from './diag';
 import { btn, formatLong, h, icon } from './dom';
 import { PlayView } from './play';
 import { play, setSound } from './sound';
@@ -142,7 +143,7 @@ export class App {
     });
 
     const el = h('div', { class: 'screen menu' },
-      h('div', { class: 'logo' }, icon('fish'), h('h1', { text: 'Словолов' }), h('p', { text: 'Лови слова из букв одного слова' })),
+      h('div', { class: 'logo', onclick: () => this.logoTap() }, icon('fish'), h('h1', { text: 'Словолов' }), h('p', { text: 'Лови слова из букв одного слова' })),
       dailyCard,
       journeyCard,
       h('div', { class: 'tools' },
@@ -160,6 +161,22 @@ export class App {
     };
     tick();
     this.ticker = window.setInterval(tick, 1000);
+  }
+
+  private logoTaps: number[] = [];
+
+  /** Пять быстрых нажатий по названию открывают диагностику площадки. */
+  private logoTap(): void {
+    const now = Date.now();
+    this.logoTaps = [...this.logoTaps.filter((t) => now - t < 3000), now];
+    if (this.logoTaps.length < 5) return;
+    this.logoTaps = [];
+    toggleDiag([
+      { label: 'Ролик за награду', run: () => void this.platform.showRewarded().then((ok) => diag('проверка ролика', String(ok))) },
+      { label: 'Реклама между уровнями', run: () => void this.platform.showInterstitial() },
+      { label: 'Рейтинг', run: () => void this.platform.leaderboard(this.save.total) },
+      { label: 'Сохранить в облако', run: () => void this.platform.save(JSON.stringify(this.save)) },
+    ]);
   }
 
   private showLevels(): void {

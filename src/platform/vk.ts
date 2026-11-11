@@ -1,5 +1,6 @@
 import bridge from '@vkontakte/vk-bridge';
 import { chunk } from '../core/save';
+import { describeError, diag } from '../ui/diag';
 import type { Platform } from './platform';
 
 const KEY_N = 'save_n';
@@ -12,7 +13,9 @@ export class VkPlatform implements Platform {
   private lastParts = 0;
 
   async init(): Promise<void> {
+    diag('площадка', `vk, приложение ${this.appId}, ${new URLSearchParams(location.search).get('vk_platform') ?? '?'}`);
     await bridge.send('VKWebAppInit');
+    diag('запуск', 'VKWebAppInit ок');
   }
 
   private get appUrl(): string {
@@ -23,13 +26,19 @@ export class VkPlatform implements Platform {
     try {
       const head = await bridge.send('VKWebAppStorageGet', { keys: [KEY_N] });
       const n = Number(head.keys[0]?.value) || 0;
-      if (n === 0) return null;
+      if (n === 0) {
+        diag('облако: чтение', 'пусто (новый игрок)');
+        return null;
+      }
       this.lastParts = n;
       const keys = Array.from({ length: n }, (_, i) => key(i));
       const res = await bridge.send('VKWebAppStorageGet', { keys });
       const byKey = new Map(res.keys.map((k) => [k.key, k.value]));
-      return keys.map((k) => byKey.get(k) ?? '').join('');
-    } catch {
+      const data = keys.map((k) => byKey.get(k) ?? '').join('');
+      diag('облако: чтение', `ок, частей ${n}, символов ${data.length}`);
+      return data;
+    } catch (e) {
+      diag('облако: чтение', `ОШИБКА ${describeError(e)}`);
       return null;
     }
   }
@@ -46,16 +55,19 @@ export class VkPlatform implements Platform {
         await bridge.send('VKWebAppStorageSet', { key: key(i), value: '' });
       }
       this.lastParts = parts.length;
-    } catch {
-      // нет сети — останется копия на устройстве
+      diag('облако: запись', `ок, частей ${parts.length}`);
+    } catch (e) {
+      diag('облако: запись', `ОШИБКА ${describeError(e)}`); // останется копия на устройстве
     }
   }
 
   private async showAd(format: 'reward' | 'interstitial'): Promise<boolean> {
     try {
       const res = await bridge.send('VKWebAppShowNativeAds', { ad_format: format as never });
+      diag(`реклама: ${format}`, `result=${res.result}`);
       return res.result === true;
-    } catch {
+    } catch (e) {
+      diag(`реклама: ${format}`, `ОШИБКА ${describeError(e)}`);
       return false; // закрыл ролик или рекламы нет — награду не даём
     }
   }
@@ -75,8 +87,10 @@ export class VkPlatform implements Platform {
         blob: pngDataUrl,
         attachment: { text: 'go_to', type: 'url', url: this.appUrl },
       });
+      diag('история', 'ок');
       return true;
-    } catch {
+    } catch (e) {
+      diag('история', `ОШИБКА ${describeError(e)}`);
       return false;
     }
   }
@@ -84,8 +98,10 @@ export class VkPlatform implements Platform {
   async shareWall(text: string): Promise<boolean> {
     try {
       await bridge.send('VKWebAppShowWallPostBox', { message: text, attachments: this.appUrl });
+      diag('стена', 'ок');
       return true;
-    } catch {
+    } catch (e) {
+      diag('стена', `ОШИБКА ${describeError(e)}`);
       return false;
     }
   }
@@ -93,24 +109,27 @@ export class VkPlatform implements Platform {
   async invite(): Promise<void> {
     try {
       await bridge.send('VKWebAppShowInviteBox');
-    } catch {
-      // игрок закрыл окно
+      diag('приглашение', 'ок');
+    } catch (e) {
+      diag('приглашение', `ОШИБКА ${describeError(e)}`);
     }
   }
 
   async leaderboard(score: number): Promise<void> {
     try {
       await bridge.send('VKWebAppShowLeaderBoardBox', { user_result: score });
-    } catch {
-      // окно закрыто
+      diag('рейтинг', `ок, очки ${score}`);
+    } catch (e) {
+      diag('рейтинг', `ОШИБКА ${describeError(e)}`);
     }
   }
 
   async addToFavorites(): Promise<void> {
     try {
       await bridge.send('VKWebAppAddToFavorites');
-    } catch {
-      // отказался — больше не спрашиваем
+      diag('избранное', 'ок');
+    } catch (e) {
+      diag('избранное', `ОШИБКА ${describeError(e)}`);
     }
   }
 }
