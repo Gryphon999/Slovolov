@@ -68,8 +68,8 @@ const save = {
   streak: 6, lastDailyDay: today, bestDaily: 27, favAsked: true,
 };
 
-async function game(name, w, h, steps) {
-  const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
+async function game(name, w, h, steps, scale = 1) {
+  const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: scale });
   const p = await ctx.newPage();
   await p.addInitScript((s) => localStorage.setItem('slovolov.save', s), JSON.stringify(save));
   await p.goto(URL);
@@ -80,14 +80,14 @@ async function game(name, w, h, steps) {
   await ctx.close();
 }
 
-for (const [suffix, w, h] of [['1200x600', 1200, 600], ['phone', 390, 844]]) {
+for (const [suffix, w, h, scale] of [['1200x600', 1200, 600, 1], ['phone', 390, 844, 1], ['1080x1920', 360, 640, 3]]) {
   await game(`screen-1-level-${suffix}`, w, h, async (p) => {
     await p.getByText('Продолжить').click();
     for (const ch of journey[12].slice(0, 4).toUpperCase()) await p.locator('.tile:not(.used)', { hasText: ch }).first().click();
-  });
-  await game(`screen-2-menu-${suffix}`, w, h, async () => {});
-  await game(`screen-3-daily-${suffix}`, w, h, async (p) => p.getByText('Мой результат').click());
-  await game(`screen-4-levels-${suffix}`, w, h, async (p) => p.getByText('Уровни').click());
+  }, scale);
+  await game(`screen-2-menu-${suffix}`, w, h, async () => {}, scale);
+  await game(`screen-3-daily-${suffix}`, w, h, async (p) => p.getByText('Мой результат').click(), scale);
+  await game(`screen-4-levels-${suffix}`, w, h, async (p) => p.getByText('Уровни').click(), scale);
 }
 await browser.close();
 console.log('готово:', OUT);

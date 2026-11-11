@@ -1,8 +1,9 @@
 // Всё, что зависит от площадки, спрятано за этим интерфейсом.
-// Игра не знает, запущена она во ВКонтакте или в обычном браузере.
+// Игра не знает, запущена она во ВКонтакте, в приложении для Android или в обычном браузере.
+import { Capacitor } from '@capacitor/core';
 
 export interface Platform {
-  readonly name: 'vk' | 'web';
+  readonly name: 'vk' | 'web' | 'android';
   init(): Promise<void>;
   load(): Promise<string | null>;
   save(data: string): Promise<void>;
@@ -15,6 +16,8 @@ export interface Platform {
   invite(): Promise<void>;
   leaderboard(score: number): Promise<void>;
   addToFavorites(): Promise<void>;
+  /** Системная кнопка «Назад» (есть только на Android). handler возвращает true, если нажатие обработано. */
+  onBack?(handler: () => boolean): void;
 }
 
 const LS_KEY = 'slovolov.save';
@@ -36,6 +39,10 @@ export function saveLocal(data: string): void {
 }
 
 export async function pickPlatform(): Promise<Platform> {
+  if (Capacitor.isNativePlatform()) {
+    const { AndroidPlatform } = await import('./android');
+    return new AndroidPlatform();
+  }
   if (new URLSearchParams(location.search).has('vk_app_id')) {
     const { VkPlatform } = await import('./vk');
     return new VkPlatform();

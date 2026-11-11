@@ -32,6 +32,20 @@ export class App {
     else this.showMenu();
   }
 
+  private atMenu = false;
+
+  /** Системная кнопка «Назад»: закрывает окно или возвращает в меню. false — мы уже в меню. */
+  back(): boolean {
+    const modal = document.querySelector('.modal');
+    if (modal) {
+      modal.remove();
+      return true;
+    }
+    if (this.atMenu) return false;
+    this.showMenu();
+    return true;
+  }
+
   // ---------- общее ----------
 
   private persist(): void {
@@ -47,6 +61,7 @@ export class App {
     this.view = null;
     window.clearInterval(this.ticker);
     document.querySelectorAll('.modal, .toast').forEach((n) => n.remove());
+    this.atMenu = el.classList.contains('menu');
     this.root.replaceChildren(el);
   }
 
@@ -215,7 +230,7 @@ export class App {
         h('td', { text: String(r.score) }),
       ),
     );
-    const vk = this.platform.name === 'vk';
+    const where = this.platform.name;
     this.show(h('div', { class: 'screen records' },
       h('header', { class: 'top' },
         btn('ghost', '', 'back', () => this.showMenu()),
@@ -227,9 +242,8 @@ export class App {
         stat(s.total, 'очков всего'),
         stat(this.totalStars, plural(this.totalStars, 'звезда', 'звезды', 'звёзд')),
       ),
-      vk
-        ? btn('primary', 'Рейтинг игроков', 'trophy', () => void this.platform.leaderboard(s.total))
-        : h('p', { class: 'foot', text: 'Общий рейтинг игроков и друзей доступен в игре во ВКонтакте.' }),
+      where === 'vk' ? btn('primary', 'Рейтинг игроков', 'trophy', () => void this.platform.leaderboard(s.total)) : null,
+      where === 'web' ? h('p', { class: 'foot', text: 'Общий рейтинг игроков и друзей доступен в игре во ВКонтакте.' }) : null,
       h('div', { class: 'card' },
         h('h3', { text: 'Уловы по дням' }),
         rows.length

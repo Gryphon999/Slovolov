@@ -25,7 +25,8 @@ async function boot(): Promise<void> {
       ]),
     ]);
     const save = newer(parseSave(loadLocal()), parseSave(cloud)) ?? newSave();
-    new App(root, platform, dictText.split(/\r?\n/), save);
+    const app = new App(root, platform, dictText.split(/\r?\n/), save);
+    platform.onBack?.(() => app.back());
   } catch (e) {
     console.error(e);
     root.innerHTML = '<p class="boot">Не получилось загрузить игру. Проверь интернет и обнови страницу.</p>';

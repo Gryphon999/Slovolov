@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Yandex Advertising Network ad unit ids (partner.yandex.ru). demo-* are Yandex test ads. -->
+    <string name="yandex_interstitial_id" translatable="false">demo-interstitial-yandex</string>
+    <string name="yandex_rewarded_id" translatable="false">demo-rewarded-yandex</string>
+</resources>

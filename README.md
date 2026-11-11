@@ -30,3 +30,17 @@ node scripts/store.mjs   # картинки для витрины ВК в docs/s
 ## Словарь
 
 Список существительных взят из проекта [Harrix/Russian-Nouns](https://github.com/Harrix/Russian-Nouns) (лицензия MIT, © Sergienko Anton). Из него убраны грубые слова, буква «ё» заменена на «е».
+
+## Android (RuStore)
+
+Игра упакована в приложение через Capacitor, пакет `ru.gryphon999.slovolov`. Реклама: Yandex Mobile Ads (ролик за подсказки и реклама между уровнями).
+
+```
+npm run build
+npx cap sync android
+node C:/Users/user/android-keys/patch-android.mjs . ru.gryphon999.slovolov <код версии> <версия> portrait
+node scripts/android-theme.mjs
+cd android && gradlew assembleRelease bundleRelease
+```
+
+Нужны `ANDROID_HOME` и `JAVA_HOME` (JDK 21). Ключ подписи лежит вне репозитория, в `C:/Users/user/android-keys`. Рекламные блоки задаются в `android/app/src/main/res/values/ads.xml`; пока там демо-блоки Яндекса. Каждое обновление в магазине требует увеличить код версии.
