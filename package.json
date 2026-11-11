@@ -1,0 +1,22 @@
+{
+  "name": "slovolov",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dict": "node scripts/build-dict.mjs",
+    "dev": "vite",
+    "build": "node scripts/build-dict.mjs && tsc --noEmit && vite build",
+    "preview": "vite preview --port 4180 --host 127.0.0.1",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.65.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "@vkontakte/vk-bridge": "^3.0.2"
+  }
+}
