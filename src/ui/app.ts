@@ -1,7 +1,7 @@
 import levels from '../data/levels.json';
-import { DAILY_SECONDS, dailyWord, dayNumber, msToNextDay } from '../core/daily';
+import { DAILY_SECONDS, dailyWord, dayLabel, dayNumber, msToNextDay } from '../core/daily';
 import { Round } from '../core/round';
-import { type Save, nextStreak } from '../core/save';
+import { HISTORY_MAX, type Save, nextStreak } from '../core/save';
 import { plural, points, starsFor } from '../core/words';
 import { type Platform, saveLocal } from '../platform/platform';
 import { renderCard } from './card';
@@ -146,7 +146,7 @@ export class App {
       dailyCard,
       journeyCard,
       h('div', { class: 'tools' },
-        this.platform.name === 'vk' ? btn('tool', 'Рейтинг', 'trophy', () => void this.platform.leaderboard(s.total)) : null,
+        btn('tool', 'Рекорды', 'trophy', () => this.showRecords()),
         btn('tool', 'Позвать друзей', 'users', () => void this.platform.invite()),
         soundBtn,
       ),
@@ -181,6 +181,48 @@ export class App {
         h('div', { class: 'title' }, h('b', { text: 'Уровни' }), h('span', { class: 'sub', text: `Звёзд: ${this.totalStars}` })),
       ),
       h('div', { class: 'grid' }, ...cells),
+    ));
+  }
+
+  // ---------- рекорды ----------
+
+  private showRecords(): void {
+    const s = this.save;
+    const stat = (value: number, label: string) => h('div', { class: 'stat' }, h('b', { text: String(value) }), h('span', { text: label }));
+    const best = Math.max(0, ...s.history.map((r) => r.words));
+    const rows = s.history.slice().reverse().map((r) =>
+      h('tr', { class: r.words === best && best > 0 ? 'best' : '' },
+        h('td', { text: dayLabel(r.day) }),
+        h('td', { class: 'w', text: r.word.toUpperCase() }),
+        h('td', { text: String(r.words) }),
+        h('td', { text: String(r.score) }),
+      ),
+    );
+    const vk = this.platform.name === 'vk';
+    this.show(h('div', { class: 'screen records' },
+      h('header', { class: 'top' },
+        btn('ghost', '', 'back', () => this.showMenu()),
+        h('div', { class: 'title' }, h('b', { text: 'Рекорды' }), h('span', { class: 'sub', text: 'Твои лучшие уловы' })),
+      ),
+      h('div', { class: 'statgrid' },
+        stat(s.bestDaily, 'рекорд слова дня'),
+        stat(Math.max(s.bestStreak, s.streak), plural(Math.max(s.bestStreak, s.streak), 'день подряд', 'дня подряд', 'дней подряд')),
+        stat(s.total, 'очков всего'),
+        stat(this.totalStars, plural(this.totalStars, 'звезда', 'звезды', 'звёзд')),
+      ),
+      vk
+        ? btn('primary', 'Рейтинг игроков', 'trophy', () => void this.platform.leaderboard(s.total))
+        : h('p', { class: 'foot', text: 'Общий рейтинг игроков и друзей доступен в игре во ВКонтакте.' }),
+      h('div', { class: 'card' },
+        h('h3', { text: 'Уловы по дням' }),
+        rows.length
+          ? h('table', { class: 'table' },
+              h('thead', {}, h('tr', {}, h('th', { text: 'День' }), h('th', { class: 'w', text: 'Слово' }), h('th', { text: 'Слов' }), h('th', { text: 'Очки' }))),
+              h('tbody', {}, ...rows),
+            )
+          : h('p', { text: 'Здесь появятся твои результаты слова дня. Сыграй сегодня, чтобы открыть таблицу.' }),
+      ),
+      btn('secondary', 'Позвать друзей', 'users', () => void this.platform.invite()),
     ));
   }
 
@@ -288,6 +330,9 @@ export class App {
       s.streak = nextStreak(s.streak, s.lastDailyDay, d.day);
       s.lastDailyDay = d.day;
       s.bestDaily = Math.max(s.bestDaily, d.words.length);
+      s.bestStreak = Math.max(s.bestStreak, s.streak);
+      const round = this.dailyRound();
+      s.history = [...s.history.filter((r) => r.day !== d.day), { day: d.day, word: round.source, words: round.found.length, score: round.score }].slice(-HISTORY_MAX);
       s.hints += 1;
       this.persist();
       play('star');

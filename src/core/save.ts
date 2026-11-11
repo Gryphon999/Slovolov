@@ -7,6 +7,15 @@ export interface DailyState {
   done: boolean;
 }
 
+export interface DailyRecord {
+  day: number;
+  word: string;
+  words: number;
+  score: number;
+}
+
+export const HISTORY_MAX = 30;
+
 export interface Save {
   v: 1;
   savedAt: number;
@@ -23,13 +32,16 @@ export interface Save {
   streak: number;
   lastDailyDay: number;
   bestDaily: number;
+  bestStreak: number;
+  /** последние уловы дня, свежие в конце */
+  history: DailyRecord[];
   favAsked: boolean;
 }
 
 export function newSave(): Save {
   return {
     v: 1, savedAt: 0, hints: 3, tutorialDone: false, sound: true, total: 0, unlocked: 0,
-    levels: {}, stars: {}, daily: null, streak: 0, lastDailyDay: -1, bestDaily: 0, favAsked: false,
+    levels: {}, stars: {}, daily: null, streak: 0, lastDailyDay: -1, bestDaily: 0, bestStreak: 0, history: [], favAsked: false,
   };
 }
 

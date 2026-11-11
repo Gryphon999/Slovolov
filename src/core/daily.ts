@@ -10,6 +10,13 @@ export function dayNumber(now: number): number {
   return Math.floor((now + MSK) / DAY) - EPOCH_DAY;
 }
 
+/** Дата дня в виде «11.11». */
+export function dayLabel(day: number): string {
+  const d = new Date((day + EPOCH_DAY) * DAY);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${p(d.getUTCDate())}.${p(d.getUTCMonth() + 1)}`;
+}
+
 export function msToNextDay(now: number): number {
   return DAY - ((now + MSK) % DAY);
 }

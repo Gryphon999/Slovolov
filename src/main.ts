@@ -2,9 +2,11 @@ import './style.css';
 import { newSave, newer, parseSave } from './core/save';
 import { loadLocal, pickPlatform } from './platform/platform';
 import { App } from './ui/app';
+import { startBackdrop } from './ui/backdrop';
 
 async function boot(): Promise<void> {
   const root = document.getElementById('app')!;
+  startBackdrop(document.getElementById('bg') as HTMLCanvasElement);
   try {
     const platform = await pickPlatform();
     const [dictText, cloud] = await Promise.all([

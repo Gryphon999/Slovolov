@@ -92,3 +92,11 @@ describe('сохранение', () => {
     expect(nextStreak(3, 11, 11)).toBe(3);
   });
 });
+
+describe('даты', () => {
+  it('номер дня превращается в подпись по московскому календарю', async () => {
+    const { dayLabel } = await import('../src/core/daily');
+    expect(dayLabel(dayNumber(Date.UTC(2026, 10, 11, 12)))).toBe('11.11');
+    expect(dayLabel(dayNumber(Date.UTC(2026, 10, 11, 22)))).toBe('12.11'); // после 21:00 UTC в Москве уже завтра
+  });
+});

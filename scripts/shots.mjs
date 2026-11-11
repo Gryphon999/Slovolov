@@ -90,6 +90,9 @@ async function run(name, viewport) {
   await download.saveAs(`shots/${name}-12-story-card.png`);
   await page.getByText('В меню').click();
   await shot('13-menu-after-daily');
+  await page.getByText('Рекорды').click();
+  await page.waitForSelector('.records');
+  await shot('14-records');
   console.log(name, 'ok, слово дня:', source);
   await ctx.close();
 }
